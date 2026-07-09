@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Portfolio{% endblock %}
+{% block page_title %}Portfolio{% endblock %}
+{% block content %}
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-label">Cash Balance</div>
+    <div class="stat-value">${{ "%.2f"|format(balance) }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Market Value</div>
+    <div class="stat-value">${{ "%.2f"|format(total_current) }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Cost Basis</div>
+    <div class="stat-value">${{ "%.2f"|format(total_invested) }}</div>
+  </div>
+  <div class="stat-card {% if total_pnl >= 0 %}positive-bg{% else %}negative-bg{% endif %}">
+    <div class="stat-label">Unrealized P&L</div>
+    <div class="stat-value {% if total_pnl >= 0 %}positive{% else %}negative{% endif %}">
+      {{ "+" if total_pnl >= 0 else "" }}${{ "%.2f"|format(total_pnl) }}
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h3>💼 Holdings</h3>
+    <a href="{{ url_for('trade') }}" class="btn btn-primary btn-sm">+ New Trade</a>
+  </div>
+  {% if holdings %}
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Symbol</th>
+        <th>Company</th>
+        <th>Qty</th>
+        <th>Avg Buy</th>
+        <th>Current Price</th>
+        <th>Invested</th>
+        <th>Current Value</th>
+        <th>P&L</th>
+        <th>P&L %</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for h in holdings %}
+      <tr>
+        <td><strong>{{ h.symbol }}</strong></td>
+        <td>{{ h.company }}</td>
+        <td>{{ h.quantity }}</td>
+        <td>${{ "%.2f"|format(h.avg_buy_price) }}</td>
+        <td>${{ "%.2f"|format(h.current_price) }}</td>
+        <td>${{ "%.2f"|format(h.invested_value) }}</td>
+        <td>${{ "%.2f"|format(h.current_value) }}</td>
+        <td class="{% if h.pnl >= 0 %}positive{% else %}negative{% endif %}">
+          {{ "+" if h.pnl >= 0 else "" }}${{ "%.2f"|format(h.pnl) }}
+        </td>
+        <td class="{% if h.pnl_pct >= 0 %}positive{% else %}negative{% endif %}">
+          {{ "+" if h.pnl_pct >= 0 else "" }}{{ h.pnl_pct }}%
+        </td>
+        <td>
+          <a href="{{ url_for('trade', symbol=h.symbol) }}" class="btn btn-sm btn-outline">Trade</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty-state">
+    <p>Your portfolio is empty. <a href="{{ url_for('trade') }}">Make your first trade →</a></p>
+  </div>
+  {% endif %}
+</div>
+
+{% if holdings %}
+<!-- Allocation Chart -->
+<div class="card mt-1">
+  <h3>📊 Allocation Breakdown</h3>
+  <div class="allocation-bars">
+    {% set total = total_current if total_current > 0 else 1 %}
+    {% for h in holdings %}
+    {% set pct = (h.current_value / total * 100) | round(1) %}
+    <div class="alloc-row">
+      <span class="alloc-symbol">{{ h.symbol }}</span>
+      <div class="alloc-bar-wrap">
+        <div class="alloc-bar" style="width: {{ pct }}%"></div>
+      </div>
+      <span class="alloc-pct">{{ pct }}%</span>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}

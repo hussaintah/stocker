@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Welcome{% endblock %}
+{% block public_content %}
+<div class="landing">
+  <nav class="landing-nav">
+    <div class="logo"><span class="logo-icon">📈</span> Stocker</div>
+    <div class="nav-links">
+      <a href="{{ url_for('login') }}" class="btn btn-outline">Log In</a>
+      <a href="{{ url_for('register') }}" class="btn btn-primary">Get Started</a>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-content">
+      <div class="hero-badge">☁️ Cloud-Native · AWS Powered</div>
+      <h1>Trade Smarter.<br>Invest Confidently.</h1>
+      <p>Stocker is your next-generation stock trading platform — real-time execution, secure authentication, and intelligent portfolio tracking. All on AWS.</p>
+      <div class="hero-actions">
+        <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">Start Trading Free</a>
+        <a href="{{ url_for('login') }}" class="btn btn-ghost btn-lg">Sign In</a>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="chart-mock">
+        <div class="chart-header">
+          <span class="stock-chip">AAPL</span>
+          <span class="stock-price">$189.50</span>
+          <span class="stock-change positive">+2.34%</span>
+        </div>
+        <svg viewBox="0 0 300 100" class="sparkline">
+          <polyline points="0,80 30,70 60,75 90,55 120,60 150,40 180,35 210,20 240,25 270,10 300,5"
+            fill="none" stroke="#00c896" stroke-width="2.5"/>
+          <polyline points="0,80 30,70 60,75 90,55 120,60 150,40 180,35 210,20 240,25 270,10 300,5 300,100 0,100"
+            fill="url(#grad)" stroke="none"/>
+          <defs>
+            <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#00c896" stop-opacity="0.4"/>
+              <stop offset="100%" stop-color="#00c896" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="mini-stats">
+          <div><label>Vol</label><span>52.3M</span></div>
+          <div><label>High</label><span>$191.20</span></div>
+          <div><label>Low</label><span>$186.90</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="features">
+    <div class="feature-card">
+      <div class="feature-icon">🔒</div>
+      <h3>Secure Auth</h3>
+      <p>SHA-256 encrypted passwords, secure sessions, and role-based access control keep your account safe.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⚡</div>
+      <h3>Real-Time Trades</h3>
+      <p>Execute buy/sell orders with near-zero latency, powered by AWS EC2 and DynamoDB.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">💼</div>
+      <h3>Portfolio Tracking</h3>
+      <p>Monitor your holdings, P&L, and performance from a clean, intelligent dashboard.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">☁️</div>
+      <h3>Cloud-Native</h3>
+      <p>Deployed on AWS EC2 with DynamoDB, CloudWatch monitoring, and S3 — built to scale.</p>
+    </div>
+  </section>
+
+  <footer class="landing-footer">
+    <p>© 2025 Stocker · Built on AWS · SmartBridge Internship Project</p>
+  </footer>
+</div>
+{% endblock %}

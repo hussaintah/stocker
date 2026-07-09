@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block title %}Trade {{ symbol }}{% endblock %}
+{% block page_title %}Trade{% endblock %}
+
+{% block head %}
+<style>
+.ticker-chips { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1.5rem; }
+.ticker-chip { padding: .35rem .8rem; border-radius: 20px; background: var(--bg2); border: 1px solid var(--border); cursor: pointer; font-size: .85rem; font-weight: 500; transition: all .2s; text-decoration: none; color: var(--text); }
+.ticker-chip:hover, .ticker-chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Stock chips -->
+<div class="ticker-chips">
+  {% for sym in popular_stocks %}
+  <a href="{{ url_for('trade', symbol=sym) }}" class="ticker-chip {% if sym == symbol %}active{% endif %}">{{ sym }}</a>
+  {% endfor %}
+</div>
+
+<!-- Search bar -->
+<div class="card mb-1">
+  <div class="search-row">
+    <input type="text" id="stockSearch" placeholder="Search symbol or company (e.g. TSLA, Netflix)..." class="search-input"/>
+    <button onclick="searchStock()" class="btn btn-primary">Search</button>
+  </div>
+  <div id="searchResults" class="search-results"></div>
+</div>
+
+<!-- Stock Info + Trade Panel -->
+<div class="grid-2">
+
+  <!-- Stock Info -->
+  <div class="card">
+    <div class="stock-header">
+      <div>
+        <h2 class="stock-symbol">{{ symbol }}</h2>
+        <p class="stock-name">{{ stock_data.name }}</p>
+      </div>
+      <div class="stock-price-block">
+        <div class="big-price">${{ "%.2f"|format(stock_data.price) }}</div>
+        <div class="price-change {% if stock_data.change >= 0 %}positive{% else %}negative{% endif %}">
+          {{ "▲" if stock_data.change >= 0 else "▼" }}
+          {{ "%.2f"|format(stock_data.change|abs) }} ({{ stock_data.change_pct }}%)
+        </div>
+      </div>
+    </div>
+
+    <div class="stock-stats-grid">
+      <div class="sstat"><label>Open</label><span>${{ "%.2f"|format(stock_data.open) }}</span></div>
+      <div class="sstat"><label>High</label><span>${{ "%.2f"|format(stock_data.high) }}</span></div>
+      <div class="sstat"><label>Low</label><span>${{ "%.2f"|format(stock_data.low) }}</span></div>
+      <div class="sstat"><label>Prev Close</label><span>${{ "%.2f"|format(stock_data.prev_close) }}</span></div>
+      <div class="sstat"><label>52W High</label><span>${{ stock_data['52w_high'] }}</span></div>
+      <div class="sstat"><label>52W Low</label><span>${{ stock_data['52w_low'] }}</span></div>
+      <div class="sstat"><label>Volume</label><span>{{ "{:,}".format(stock_data.volume|int) }}</span></div>
+      <div class="sstat"><label>Sector</label><span>{{ stock_data.sector }}</span></div>
+    </div>
+
+    {% if holding %}
+    <div class="holding-banner">
+      <span>🟢 You own <strong>{{ holding.quantity }}</strong> shares · Avg buy: <strong>${{ "%.2f"|format(holding.avg_buy_price|float) }}</strong></span>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Trade Panel -->
+  <div class="card trade-panel">
+    <h3>Execute Trade</h3>
+    <p class="balance-display">Available: <strong>${{ "%.2f"|format(balance) }}</strong></p>
+
+    <form method="POST" action="{{ url_for('execute_trade') }}" id="tradeForm">
+      <input type="hidden" name="symbol" value="{{ symbol }}"/>
+
+      <div class="action-tabs">
+        <button type="button" class="tab-btn active" id="buyTab" onclick="setAction('buy')">BUY</button>
+        <button type="button" class="tab-btn sell-tab" id="sellTab" onclick="setAction('sell')">SELL</button>
+      </div>
+      <input type="hidden" name="action" id="actionInput" value="buy"/>
+
+      <div class="form-group mt-1">
+        <label>Quantity</label>
+        <div class="qty-row">
+          <button type="button" onclick="adjustQty(-1)">−</button>
+          <input type="number" name="quantity" id="qtyInput" value="1" min="1" max="10000"
+                 oninput="updateTotal()"/>
+          <button type="button" onclick="adjustQty(1)">+</button>
+        </div>
+      </div>
+
+      <div class="trade-summary">
+        <div class="summary-row">
+          <span>Price per share</span>
+          <span id="priceDisplay">${{ "%.2f"|format(stock_data.price) }}</span>
+        </div>
+        <div class="summary-row total-row">
+          <span>Estimated Total</span>
+          <span id="totalDisplay" class="total-amount">${{ "%.2f"|format(stock_data.price) }}</span>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-full mt-1" id="tradeBtn">
+        BUY {{ symbol }}
+      </button>
+    </form>
+  </div>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const price = {{ stock_data.price }};
+const balance = {{ balance }};
+const symbol = "{{ symbol }}";
+
+function setAction(action) {
+  document.getElementById('actionInput').value = action;
+  document.getElementById('tradeBtn').textContent = action.toUpperCase() + ' ' + symbol;
+  document.getElementById('buyTab').classList.toggle('active', action === 'buy');
+  document.getElementById('sellTab').classList.toggle('active', action === 'sell');
+  document.getElementById('tradeBtn').className = 'btn btn-full mt-1 ' + (action === 'buy' ? 'btn-primary' : 'btn-danger');
+}
+
+function adjustQty(delta) {
+  const input = document.getElementById('qtyInput');
+  const newVal = Math.max(1, parseInt(input.value || 1) + delta);
+  input.value = newVal;
+  updateTotal();
+}
+
+function updateTotal() {
+  const qty = parseInt(document.getElementById('qtyInput').value) || 0;
+  const total = (qty * price).toFixed(2);
+  document.getElementById('totalDisplay').textContent = '$' + parseFloat(total).toLocaleString('en-US', {minimumFractionDigits:2});
+}
+
+async function searchStock() {
+  const q = document.getElementById('stockSearch').value.trim();
+  if (!q) return;
+  const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+  const results = await res.json();
+  const container = document.getElementById('searchResults');
+  if (!results.length) {
+    container.innerHTML = '<p class="no-results">No results found.</p>';
+    return;
+  }
+  container.innerHTML = results.map(r =>
+    `<a class="search-result-item" href="/trade?symbol=${r.symbol}">
+       <strong>${r.symbol}</strong> <span>${r.name}</span> <em>${r.sector}</em>
+     </a>`
+  ).join('');
+}
+
+document.getElementById('stockSearch').addEventListener('keydown', e => {
+  if (e.key === 'Enter') searchStock();
+});
+
+updateTotal();
+</script>
+{% endblock %}

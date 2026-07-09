@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Market{% endblock %}
+{% block page_title %}Market Overview{% endblock %}
+{% block content %}
+
+<div class="card">
+  <div class="card-header">
+    <h3>🌐 Live Market Data</h3>
+    <button onclick="location.reload()" class="btn btn-outline btn-sm">↻ Refresh</button>
+  </div>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Symbol</th>
+        <th>Company</th>
+        <th>Sector</th>
+        <th>Price</th>
+        <th>Change</th>
+        <th>Change %</th>
+        <th>Volume</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in market_data %}
+      <tr>
+        <td><strong>{{ s.symbol }}</strong></td>
+        <td>{{ s.name }}</td>
+        <td><span class="sector-tag">{{ s.sector }}</span></td>
+        <td>${{ "%.2f"|format(s.price) }}</td>
+        <td class="{% if s.change >= 0 %}positive{% else %}negative{% endif %}">
+          {{ "+" if s.change >= 0 else "" }}${{ "%.2f"|format(s.change) }}
+        </td>
+        <td class="{% if s.change_pct >= 0 %}positive{% else %}negative{% endif %}">
+          {{ "+" if s.change_pct >= 0 else "" }}{{ s.change_pct }}%
+        </td>
+        <td>{{ "{:,}".format(s.volume|int) }}</td>
+        <td><a href="{{ url_for('trade', symbol=s.symbol) }}" class="btn btn-sm btn-primary">Trade</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

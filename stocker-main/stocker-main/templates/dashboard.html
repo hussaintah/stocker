@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block content %}
+
+<!-- Stats Row -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-label">Available Balance</div>
+    <div class="stat-value">${{ "%.2f"|format(balance) }}</div>
+    <div class="stat-sub">Virtual funds</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Portfolio Value</div>
+    <div class="stat-value">${{ "%.2f"|format(total_current) }}</div>
+    <div class="stat-sub">Current market value</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Total Invested</div>
+    <div class="stat-value">${{ "%.2f"|format(total_invested) }}</div>
+    <div class="stat-sub">Cost basis</div>
+  </div>
+  <div class="stat-card {% if portfolio_pnl >= 0 %}positive-bg{% else %}negative-bg{% endif %}">
+    <div class="stat-label">Total P&L</div>
+    <div class="stat-value {% if portfolio_pnl >= 0 %}positive{% else %}negative{% endif %}">
+      {{ "+" if portfolio_pnl >= 0 else "" }}${{ "%.2f"|format(portfolio_pnl) }}
+    </div>
+    <div class="stat-sub">{{ portfolio_pnl_pct }}% overall</div>
+  </div>
+</div>
+
+<!-- Holdings + Market -->
+<div class="grid-2">
+
+  <!-- Holdings -->
+  <div class="card">
+    <div class="card-header">
+      <h3>📊 My Holdings</h3>
+      <a href="{{ url_for('portfolio') }}" class="link-sm">View All →</a>
+    </div>
+    {% if holdings %}
+    <table class="data-table">
+      <thead>
+        <tr><th>Symbol</th><th>Qty</th><th>Price</th><th>P&L</th></tr>
+      </thead>
+      <tbody>
+        {% for h in holdings[:5] %}
+        <tr>
+          <td><a href="{{ url_for('trade', symbol=h.symbol) }}" class="stock-link">{{ h.symbol }}</a></td>
+          <td>{{ h.quantity }}</td>
+          <td>${{ "%.2f"|format(h.current_price) }}</td>
+          <td class="{% if h.pnl >= 0 %}positive{% else %}negative{% endif %}">
+            {{ "+" if h.pnl >= 0 else "" }}{{ h.pnl_pct }}%
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <p>No holdings yet. <a href="{{ url_for('trade') }}">Start trading →</a></p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Market Overview -->
+  <div class="card">
+    <div class="card-header">
+      <h3>🌐 Market Overview</h3>
+      <a href="{{ url_for('market') }}" class="link-sm">Full Market →</a>
+    </div>
+    <table class="data-table">
+      <thead>
+        <tr><th>Symbol</th><th>Price</th><th>Change</th></tr>
+      </thead>
+      <tbody>
+        {% for s in market_data[:6] %}
+        <tr>
+          <td><a href="{{ url_for('trade', symbol=s.symbol) }}" class="stock-link">{{ s.symbol }}</a></td>
+          <td>${{ "%.2f"|format(s.price) }}</td>
+          <td class="{% if s.change >= 0 %}positive{% else %}negative{% endif %}">
+            {{ "+" if s.change >= 0 else "" }}{{ s.change_pct }}%
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- Recent Orders -->
+<div class="card mt-1">
+  <div class="card-header">
+    <h3>📋 Recent Orders</h3>
+    <a href="{{ url_for('history') }}" class="link-sm">Full History →</a>
+  </div>
+  {% if recent_orders %}
+  <table class="data-table">
+    <thead>
+      <tr><th>Symbol</th><th>Action</th><th>Qty</th><th>Price</th><th>Total</th><th>Time</th></tr>
+    </thead>
+    <tbody>
+      {% for o in recent_orders %}
+      <tr>
+        <td><strong>{{ o.symbol }}</strong></td>
+        <td><span class="badge badge-{{ o.action }}">{{ o.action.upper() }}</span></td>
+        <td>{{ o.quantity }}</td>
+        <td>${{ "%.2f"|format(o.price|float) }}</td>
+        <td>${{ "%.2f"|format(o.total|float) }}</td>
+        <td class="time-cell">{{ o.timestamp[:16].replace('T',' ') }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty-state"><p>No orders yet. <a href="{{ url_for('trade') }}">Execute your first trade →</a></p></div>
+  {% endif %}
+</div>
+
+{% endblock %}

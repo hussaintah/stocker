@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}Stocker{% endblock %} | Stocker</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  {% block head %}{% endblock %}
+</head>
+<body>
+
+{% if session.user_id %}
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <span class="logo-icon">📈</span>
+    <span class="logo-text">Stocker</span>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="{{ url_for('dashboard') }}" class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
+      <span class="nav-icon">⊞</span> Dashboard
+    </a>
+    <a href="{{ url_for('trade') }}" class="nav-item {% if request.endpoint == 'trade' %}active{% endif %}">
+      <span class="nav-icon">⚡</span> Trade
+    </a>
+    <a href="{{ url_for('portfolio') }}" class="nav-item {% if request.endpoint == 'portfolio' %}active{% endif %}">
+      <span class="nav-icon">💼</span> Portfolio
+    </a>
+    <a href="{{ url_for('market') }}" class="nav-item {% if request.endpoint == 'market' %}active{% endif %}">
+      <span class="nav-icon">🌐</span> Market
+    </a>
+    <a href="{{ url_for('history') }}" class="nav-item {% if request.endpoint == 'history' %}active{% endif %}">
+      <span class="nav-icon">📋</span> History
+    </a>
+    <a href="{{ url_for('profile') }}" class="nav-item {% if request.endpoint == 'profile' %}active{% endif %}">
+      <span class="nav-icon">👤</span> Profile
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    <a href="{{ url_for('logout') }}" class="nav-item logout">
+      <span class="nav-icon">⏻</span> Logout
+    </a>
+  </div>
+</aside>
+
+<!-- Main wrapper -->
+<div class="main-wrapper">
+  <header class="topbar">
+    <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+    <div class="topbar-left">
+      <span class="topbar-title">{% block page_title %}Dashboard{% endblock %}</span>
+    </div>
+    <div class="topbar-right">
+      <div class="ticker-bar" id="tickerBar">Loading market data...</div>
+      <div class="user-pill">
+        <span class="user-avatar">{{ session.full_name[0].upper() }}</span>
+        <span class="user-name">{{ session.full_name }}</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="content">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-container">
+          {% for category, message in messages %}
+            <div class="flash flash-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+</div>
+
+{% else %}
+<!-- Public pages -->
+<div class="public-wrapper">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-container">
+        {% for category, message in messages %}
+          <div class="flash flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+  {% block public_content %}{% endblock %}
+</div>
+{% endif %}
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

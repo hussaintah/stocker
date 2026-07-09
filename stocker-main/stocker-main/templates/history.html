@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Order History{% endblock %}
+{% block page_title %}Transaction History{% endblock %}
+{% block content %}
+
+<div class="card">
+  <div class="card-header">
+    <h3>📋 All Orders</h3>
+    <span class="tag">{{ orders|length }} total</span>
+  </div>
+  {% if orders %}
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Date & Time</th>
+        <th>Symbol</th>
+        <th>Action</th>
+        <th>Quantity</th>
+        <th>Price</th>
+        <th>Total</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for o in orders %}
+      <tr>
+        <td class="time-cell">{{ o.timestamp[:16].replace('T', ' ') }}</td>
+        <td><strong>{{ o.symbol }}</strong></td>
+        <td><span class="badge badge-{{ o.action }}">{{ o.action.upper() }}</span></td>
+        <td>{{ o.quantity }}</td>
+        <td>${{ "%.2f"|format(o.price) }}</td>
+        <td>${{ "%.2f"|format(o.total) }}</td>
+        <td><span class="badge badge-executed">{{ o.status|upper }}</span></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty-state">
+    <p>No transactions yet. <a href="{{ url_for('trade') }}">Start trading →</a></p>
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}
